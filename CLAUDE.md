@@ -61,7 +61,49 @@
 
 ---
 
-## 3. プラグイン・拡張機能
+## 3. プロジェクト作成時のルール
+
+### .gitignore の必須作成
+- 新しいプロジェクトフォルダを作成する際は、**必ず `.gitignore` を作成する**
+- 以下のパターンを必ず含めること：
+
+```
+# 環境変数・秘密情報
+.env
+.env.local
+.env.*.local
+
+# サービスアカウントキー・認証情報
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!appsscript.json
+
+# APIキー・トークンファイル
+*secret*
+*credential*
+*token*
+
+# OS・エディタ
+.DS_Store
+Thumbs.db
+.vscode/settings.json
+
+# Node.js
+node_modules/
+
+# ログ・一時ファイル
+*.log
+tmp_*
+```
+
+- プロジェクトの内容に応じて追加のパターンを提案する
+- `.gitignore` が存在しない状態で `git init` や `git add` を実行しない
+
+---
+
+## 4. プラグイン・拡張機能
 
 - **ホワイトリストに掲載されたプラグインのみ使用可**
 - 新しいプラグインを使いたい場合は、AIリーダーまたはTECHチームに申請する
@@ -69,7 +111,7 @@
 
 ---
 
-## 4. 作業スタイル
+## 5. 作業スタイル
 
 ### 計画を立ててから動く
 - 3ステップ以上の作業は、まず **計画を提示** してから実行する
@@ -87,7 +129,7 @@
 
 ---
 
-## 5. 会社情報
+## 6. 会社情報
 
 - **会社名**: SARUCREW
 - **AI環境**: Claude Code（VSCode + Team plan）

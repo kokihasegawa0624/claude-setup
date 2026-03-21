@@ -1,0 +1,16 @@
+# SARUCREW グローバル .gitignore
+# 全プロジェクトで機密ファイルの誤共有を防止する
+
+# 環境変数・秘密情報
+.env
+.env.local
+.env.*.local
+
+# サービスアカウントキー・認証情報（package.json等は除外しない）
+*secret*
+*credential*
+*token*
+
+# OS・エディタ
+.DS_Store
+Thumbs.db

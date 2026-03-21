@@ -15,14 +15,14 @@ echo ""
 
 # 1. ~/.claude/ フォルダ作成
 if [ ! -d "$CLAUDE_DIR" ]; then
-  echo "[1/3] ~/.claude/ フォルダを作成中..."
+  echo "[1/4] ~/.claude/ フォルダを作成中..."
   mkdir -p "$CLAUDE_DIR"
 else
-  echo "[1/3] ~/.claude/ フォルダは既にあります"
+  echo "[1/4] ~/.claude/ フォルダは既にあります"
 fi
 
 # 2. CLAUDE.md を配置
-echo "[2/3] SARUCREW共通ルール（CLAUDE.md）をダウンロード中..."
+echo "[2/4] SARUCREW共通ルール（CLAUDE.md）をダウンロード中..."
 if [ -f "$CLAUDE_DIR/CLAUDE.md" ]; then
   cp "$CLAUDE_DIR/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md.bak"
   echo "  → 既存ファイルを CLAUDE.md.bak にバックアップしました"
@@ -31,13 +31,23 @@ curl -sL "$REPO_BASE/CLAUDE.md" -o "$CLAUDE_DIR/CLAUDE.md"
 echo "  → ~/.claude/CLAUDE.md に配置しました"
 
 # 3. settings.json を配置
-echo "[3/3] SARUCREW安全設定（settings.json）をダウンロード中..."
+echo "[3/4] SARUCREW安全設定（settings.json）をダウンロード中..."
 if [ -f "$CLAUDE_DIR/settings.json" ]; then
   cp "$CLAUDE_DIR/settings.json" "$CLAUDE_DIR/settings.json.bak"
   echo "  → 既存ファイルを settings.json.bak にバックアップしました"
 fi
 curl -sL "$REPO_BASE/settings.json" -o "$CLAUDE_DIR/settings.json"
 echo "  → ~/.claude/settings.json に配置しました"
+
+# 4. グローバル .gitignore を配置
+echo "[4/4] グローバル .gitignore を設定中..."
+if [ -f "$HOME/.gitignore_global" ]; then
+  cp "$HOME/.gitignore_global" "$HOME/.gitignore_global.bak"
+  echo "  → 既存ファイルを .gitignore_global.bak にバックアップしました"
+fi
+curl -sL "$REPO_BASE/.gitignore_global" -o "$HOME/.gitignore_global"
+git config --global core.excludesFile "$HOME/.gitignore_global"
+echo "  → ~/.gitignore_global に配置し、Gitに適用しました"
 
 echo ""
 echo "========================================="
