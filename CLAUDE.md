@@ -134,3 +134,190 @@ tmp_*
 - **会社名**: SARUCREW
 - **AI環境**: Claude Code（VSCode + Team plan）
 - **問い合わせ先**: 各部署AIリーダー、またはTECHチーム
+
+---
+
+# 社内ツール認証基盤テンプレート ガイド
+
+> 以下は、社内向けWebアプリを作る際のベーステンプレートの使い方です。
+> Google Workspaceアカウントでログインできる認証付きアプリの基盤が用意されており、**アプリの機能だけを追加すればよい**設計になっています。
+
+---
+
+## 技術スタック
+
+| 用途 | 技術 |
+|------|------|
+| フレームワーク | Next.js 15 (App Router) |
+| 認証 | Auth.js v5 (next-auth beta) |
+| 認証プロバイダー | Google OAuth 2.0 |
+| Google API 連携 | googleapis ライブラリ |
+| バックエンドロジック | Google Apps Script (GAS) |
+| 言語 | TypeScript |
+
+---
+
+## ファイル構成
+
+```
+internal-sample/
+├── CLAUDE.md                          ← このファイル
+├── .env.local                         ← 環境変数（秘密情報。Git に含めない）
+├── next.config.ts                     ← Next.js 設定（触らなくてよい）
+├── gas/
+│   ├── appsscript.json                ← GAS の設定ファイル
+│   └── main.js                        ← GAS の関数置き場
+└── src/
+    ├── auth.config.ts                 ← 認証設定（触らなくてよい）
+    ├── auth.ts                        ← 認証エクスポート（触らなくてよい）
+    ├── middleware.ts                  ← ルート保護（触らなくてよい）
+    ├── types/
+    │   └── next-auth.d.ts             ← 型定義（触らなくてよい）
+    ├── lib/
+    │   └── google-client.ts           ← Google API クライアント（触らなくてよい）
+    ├── actions/
+    │   └── gas.ts                     ← GAS 呼び出し関数 ★ここに追加する
+    └── app/
+        ├── layout.tsx                 ← HTML の外枠（タイトル等を変更可）
+        ├── login/
+        │   └── page.tsx               ← ログイン画面（デザイン変更可）
+        ├── page.tsx                   ← トップページ ★ここを作り込む
+        └── gas-demo.tsx               ← GAS デモ（参考用・削除 or 改造可）
+```
+
+---
+
+## 認証の仕組み（概要）
+
+1. 未ログインのユーザーは自動的に `/login` へリダイレクトされる
+2. 「Google アカウントでログイン」ボタンを押すと Google の認証画面へ
+3. `ALLOWED_DOMAIN` に設定したドメイン（例: `sarucrew.co.jp`）以外のアカウントは弾かれる
+4. ログイン後、セッションにアクセストークンが保存され、Google API を呼び出せる
+
+**→ 認証は自動で動く。ページを追加するだけで自動的に保護される。**
+
+---
+
+## 環境変数（.env.local）
+
+```
+GOOGLE_CLIENT_ID=      # GCP の OAuth クライアント ID
+GOOGLE_CLIENT_SECRET=  # GCP の OAuth クライアントシークレット
+AUTH_SECRET=           # Auth.js のシークレット（npx auth secret で生成）
+GAS_SCRIPT_ID=         # GAS のスクリプト ID（スクリプトエディタの URL から取得）
+ALLOWED_DOMAIN=        # ログインを許可する Google Workspace ドメイン（例: example.co.jp）
+```
+
+---
+
+## よくある作業パターン
+
+### 1. 新しいページを追加する
+
+`src/app/` に新しいディレクトリを作るだけ。認証は自動で適用される。
+
+```
+src/app/
+└── mypage/
+    └── page.tsx   ← 新しいページ
+```
+
+`page.tsx` の基本パターン:
+
+```tsx
+import { auth } from "@/auth"
+import { redirect } from "next/navigation"
+
+export default async function MyPage() {
+  const session = await auth()
+  if (!session?.user) redirect("/login")
+
+  return (
+    <main>
+      <h1>ページタイトル</h1>
+      <p>ログインユーザー: {session.user.name}</p>
+      {/* ここに機能を書く */}
+    </main>
+  )
+}
+```
+
+### 2. GAS の関数を呼び出す
+
+**ステップ1**: `gas/main.js` に GAS 関数を書く
+
+```js
+function myFunction(param) {
+  // スプレッドシート操作などの処理
+  return { result: "OK" }
+}
+```
+
+**ステップ2**: `src/actions/gas.ts` に Server Action を追加する
+
+```ts
+export async function myFunction(param: string) {
+  return callGasWithAuth("myFunction", [param])
+}
+```
+
+**ステップ3**: ページや Client Component から呼び出す
+
+```tsx
+"use client"
+import { myFunction } from "@/actions/gas"
+
+// ボタンのクリックハンドラなどで:
+const result = await myFunction("引数")
+```
+
+### 3. セッション情報（ユーザー名・メール）を使う
+
+Server Component（`page.tsx` など）では:
+
+```tsx
+const session = await auth()
+session.user.name   // ユーザー名
+session.user.email  // メールアドレス
+session.user.image  // プロフィール画像 URL
+```
+
+---
+
+## 触ってはいけないファイル
+
+以下は認証基盤の核心部分。変更すると認証が壊れる可能性がある:
+
+- `src/auth.config.ts`
+- `src/auth.ts`
+- `src/middleware.ts`
+- `src/types/next-auth.d.ts`
+- `src/lib/google-client.ts`
+- `src/actions/gas.ts` の `callGasWithAuth` 関数
+
+---
+
+## 開発コマンド
+
+```bash
+npm run dev        # 開発サーバー起動（http://localhost:3000）
+npm run build      # 本番ビルド
+npm run type-check # TypeScript 型チェック
+```
+
+---
+
+## GAS のデプロイ設定（重要）
+
+`gas/appsscript.json` の設定:
+- **実行ユーザー**: 「API を実行するユーザー」（ユーザーの権限で実行される）
+- **アクセス**: `DOMAIN`（組織内のみ）
+
+GAS スクリプトエディタでのデプロイ手順:
+1. 「デプロイ」→「新しいデプロイ」
+2. 「APIの実行可能ファイル」として作成
+3. アクセスできるユーザーを「組織内の全員」に設定
+4. デプロイ後のスクリプト ID を `.env.local` の `GAS_SCRIPT_ID` に設定
+
+GAS スクリプトプロパティの設定（スクリプトエディタ →「プロジェクトの設定」→「スクリプトプロパティ」）:
+- `SPREADSHEET_ID`: 操作したいスプレッドシートの ID（URL から取得）
