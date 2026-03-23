@@ -137,6 +137,22 @@ SARUCREWという会社の社内アシスタントとして自己紹介してく
 
 ---
 
+## Desktop / Web版を使いたい場合
+
+ターミナルが苦手な人は、ブラウザやアプリで使える **Desktop / Web版（claude.ai）** もあります。
+同じTeam planアカウントでログインすれば、データ保護は同じです。
+
+1. ブラウザで [claude.ai](https://claude.ai) にアクセス
+2. Team planアカウントでログイン
+3. **チャット開始時に、以下のルールファイルを貼り付けてから作業してください**
+
+👉 [SARUCREW_claude_desktop_rules.md](./SARUCREW_claude_desktop_rules.md)
+
+> **注意**: Desktop / Web版にはセキュリティ設定の自動適用がありません。
+> 毎回ルールを読み込ませないと、個人情報の警告やファクトチェックのリマインドが効きません。
+
+---
+
 ## 困ったときは
 
 | 状況 | 対処法 |
